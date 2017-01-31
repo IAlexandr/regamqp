@@ -48,8 +48,6 @@ func ConsumeByRegId(regId string, receiveFunc func(amqp.Delivery)) {
 	)
 	FailOnError(err, "Failed to register a consumer")
 
-	forever := make(chan bool)
-
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d)
@@ -58,5 +56,4 @@ func ConsumeByRegId(regId string, receiveFunc func(amqp.Delivery)) {
 	}()
 
 	log.Printf(" [*] (%q) Waiting for messages. To exit press CTRL+C", regId)
-	<-forever
 }
