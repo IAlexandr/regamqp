@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+/* v0.1.0 */
+
 var CH *amqp.Channel
 
 func FailOnError(err error, msg string) {
@@ -28,39 +30,39 @@ func AmqpConnect(url string) (*amqp.Connection, *amqp.Channel) {
 
 func ConsumeByRegId(regId string, receiveFunc func(amqp.Delivery)) {
 	err := CH.ExchangeDeclare(
-		"regs",   // name
+		"regs", // name
 		"direct", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
+		true, // durable
+		false, // auto-deleted
+		false, // internal
+		false, // no-wait
+		nil, // arguments
 	)
 	FailOnError(err, "Failed to declare an exchange")
 	q, err := CH.QueueDeclare(
 		"regs." + regId, // name
-		false,   // durable
-		false,   // delete when usused
-		true,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		false, // durable
+		false, // delete when usused
+		true, // exclusive
+		false, // no-wait
+		nil, // arguments
 	)
 	FailOnError(err, "Failed to declare a queue")
 	err = CH.QueueBind(
 		q.Name, // queue name
-		"regs." + regId,     // routing key
+		"regs." + regId, // routing key
 		"regs", // exchange
 		false,
 		nil)
 	FailOnError(err, "Failed to bind a queue")
 	msgs, err := CH.Consume(
 		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		"", // consumer
+		true, // auto-ack
+		false, // exclusive
+		false, // no-local
+		false, // no-wait
+		nil, // args
 	)
 	FailOnError(err, "Failed to register a consumer")
 
@@ -74,16 +76,17 @@ func ConsumeByRegId(regId string, receiveFunc func(amqp.Delivery)) {
 	log.Printf(" [*] (%q) Waiting for messages. To exit press CTRL+C", regId)
 }
 
-func PublishTo(exchangeName, route string, message string) error {
+func PublishTo(exchangeName, route string, message []byte, Type string) error {
 	err := CH.Publish(
-		exchangeName,     // exchange
+		exchangeName, // exchange
 		route, // routing key
-		false,  // mandatory
-		false,  // immediate
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(message),
+			Body:        message,
+			Type: Type,
 		})
-	log.Printf(" [x] Sent %s", message)
+	log.Printf(" [x] Sent %s", string(message))
 	return err
 }
